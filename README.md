@@ -28,32 +28,39 @@ it fits your rice. it handles tokyo night/catppuccin colors automatically. it pl
 just copy paste this. it creates a venv so it doesn't break your system python.
 
 ```bash
-git clone [https://github.com/YOUR_USERNAME/pokefact.git](https://github.com/YOUR_USERNAME/pokefact.git)
+git clone [https://github.com/potatopakoda/pokefact.git](https://github.com/YOUR_USERNAME/pokefact.git)
 cd pokefact
 chmod +x install.sh
 ./install.sh
+```
+
 🎮 usage
 get a random mon because you're bored:
 
-Bash
-
+```Bash
 pokefact
+```
+
 look up specific stuff:
 
-Bash
-
+```Bash
 pokefact -p gengar
+```
+
 shiny mode + audio (loud):
 
-Bash
-
+```Bash
 pokefact -p lucario -s -a
+```
+
 🗑️ uninstall
 if you hate it:
 
-Bash
-
+```Bash
 ./uninstall.sh
+```
+
+
 🧠 credits
 data: pokeapi
 
@@ -61,4 +68,18 @@ art: pokemon-colorscripts (bundled locally)
 
 terminal pretty print: rich
 
+
+
+
+
 mit license. steal this code if you want, i don't care.
+
+
+
+
+
+
+
+
+
+
