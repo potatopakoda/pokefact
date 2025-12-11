@@ -96,7 +96,7 @@ chmod +x install.sh
 ```
 
 ```
-.\install.sh
+.\install.ps1
 ```
 
 4. close window and open a new one.
@@ -106,6 +106,7 @@ chmod +x install.sh
 
 ***NOTE***
 audio may not work on windows, idk why though i didn't bother. so...yeahh :)
+
 
 
 
