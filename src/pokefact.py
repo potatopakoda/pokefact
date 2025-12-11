@@ -7,13 +7,21 @@ from rich.table import Table
 from rich.text import Text
 from rich import box
 
-# FIX: SSL warnings
+# Try import PIL for sprite generation
+try:
+    from PIL import Image
+    from io import BytesIO
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
+# ssl fix
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 base = "https://pokeapi.co/api/v2/"
 con = Console()
 
-# --- THE SUBSTITUTE DOLL (Fallback) ---
+# --- FALLBACK ART ---
 SUB = r"""
     _._
    (o o)
@@ -21,19 +29,147 @@ SUB = r"""
   (_/ \_)
 """
 
+# --- MASSIVE TRIVIA DATABASE ---
 trivia = {
-    "pikachu": "Ash's partner. Hates balls.",
-    "charizard": "Disobedient. Leon's Ace.",
-    "lucario": "Aura master. Beat Cynthia.",
-    "greninja": "Ash-Greninja form.",
-    "mewtwo": "Destroyed Cinnabar Lab.",
-    "rayquaza": "Mega via Dragon Ascent.",
-    "garchomp": "Cynthia's run killer.",
-    "infernape": "Blaze ability go brrr.",
-    "sceptile": "Beat Darkrai w/ Leaf Blade.",
-    "wobbuffet": "Counter/Mirror Coat god.",
-    "mimikyu": "Pikachu hater.",
-    "meowth": "Talking cat."
+    "pikachu": [
+        "Is the official mascot of the entire Pokémon franchise.",
+        "It was one of the earliest designs created, preceding most others.",
+        "In the games, it is known as the 'Mouse Pokémon' and stores electricity in its cheeks.",
+        "Ash's Pikachu is disobedient at first, but warms up after Ash saves it from a flock of Spearow.",
+        "It refuses to stay in its Poké Ball and instead follows the main character around in Pokémon Yellow.",
+        "Multiple event distributions have given Pikachu various hats worn by Ash across the seasons.",
+        "Has been a playable fighter in all five Super Smash Bros. crossover fighting games.",
+        "The word 'Pikachu' comes from the Japanese 'pika' (a small animal) and 'chu' (the sound a mouse makes).",
+    ],
+    "charizard": [
+        "In Japan, Charizard is known as 'Lizardon'.",
+        "It is the main Pokémon featured on the game covers for Pokémon Red and FireRed.",
+        "Its flame can turn a bright whitish-blue color if it gets extremely angry.",
+        "It has two special Mega Evolutions: Mega Charizard X (gaining Dragon typing) and Mega Charizard Y.",
+        "The first-ever Charizard Trading Card (1999) became a highly sought-after collector's item.",
+        "Ash's Charizard was notoriously disobedient until saving Ash in a blizzard.",
+        "The front of its wings is blue, and the back is orange.",
+        "It was a playable character in Super Smash Bros. Brawl as part of the Pokémon Trainer's team.",
+    ],
+    "lucario": [
+        "It is known as the 'Aura Pokémon' and is a Fighting/Steel type.",
+        "A well-trained Lucario can sense auras and identify feelings of creatures over half a mile away.",
+        "In the anime movie, the original Lucario was a servant to Sir Aaron and could speak human languages without psychic powers.",
+        "It is based on the mythical creature Anubis, the jackal-headed god of ancient Egypt.",
+        "In the Pokémon Mystery Dungeon games, achieving 15,000 Rescue Points earns the player the top rank, the 'Lucario Rank'.",
+        "It has a Mega Evolution introduced in Generation 6 games.",
+        "Its fighting style in Mega form can be summed up in a single word: heartless.",
+    ],
+    "garchomp": [
+        "It is known as the 'Mach Pokémon'.",
+        "It combines the design of a dinosaur, a European dragon, and a hammerhead shark.",
+        "It is famous for being the signature Pokémon of Champion Cynthia, contributing to her difficulty as an opponent.",
+        "It is often considered one of the top competitive Pokémon due to its high speed and attack power.",
+        "Garchomp was one of the few non-legendary Pokémon to be banned in some competitions due to its strength.",
+        "Its ability, Rough Skin, hurts foes that hit it with physical moves.",
+        "It evolves from Gabite at level 48.",
+    ],
+    "rayquaza": [
+        "It is the trio master of the Weather Trio (with Kyogre and Groudon) and serves as their leader.",
+        "It resides high up in the ozone layer and flies endlessly, rarely descending to the ground.",
+        "It serves as the mascot legendary for Pokémon Emerald.",
+        "It achieves Mega Evolution using the move Dragon Ascent, requiring no Mega Stone.",
+        "Lore states it has lived for hundreds of millions of years in the ozone layer.",
+        "It feeds on water and particles in the atmosphere and meteoroids for substance.",
+        "In the Delta Episode of Omega Ruby/Alpha Sapphire, it destroyed a meteoroid by flying straight through it in its Mega form.",
+    ],
+    "mewtwo": [
+        "It is known as the 'Genetic Pokémon' and was created by genetically modifying Mew's DNA.",
+        "It was the strongest Pokémon in the original games in terms of base statistic distribution.",
+        "It was one of the earliest Pokémon designs created, preceding even Pikachu.",
+        "Mewtwo can use telekinesis for flight, shielding, and throwing opponents.",
+        "It is among the very few Pokémon capable of human speech, doing so via telepathy.",
+        "It has two Mega Evolved forms, Mega Mewtwo X and Mega Mewtwo Y.",
+        "Mewtwo received the signature move 'Psystrike' in Pokémon Black and White.",
+        "In the anime, Mewtwo's fury was enraged by the fact that it wasn't created by God (Japanese version lore).",
+    ],
+    "infernape": [
+        "It is the fastest final evolution of the Sinnoh starter Pokémon.",
+        "It is based on the ape and has plates of gold covering its shoulders, wrists, knees, and chest.",
+        "It uses all its limbs to fight in its own unique style, tossing enemies around with agility.",
+        "It has the ability Blaze, which powers up its Fire-type moves when its HP is low.",
+        "Ash's Infernape gained control of its powerful Blaze ability to defeat Paul's Electivire.",
+    ],
+    "sceptile": [
+        "It is known as the 'Forest Pokémon'.",
+        "Its leaves, which grow on its forelegs, are described as being as sharp as swords.",
+        "It is without peer in jungle combat and can slice down thick trees.",
+        "Ash's Sceptile famously defeated Tobias' Darkrai during the Sinnoh League semi-finals.",
+        "It regulates its body temperature by basking in sunlight.",
+        "It has Mega Evolution available using Sceptilite.",
+    ],
+    "greninja": [
+        "Ash-Greninja form was released to games as an empowered form accessible via the Pokémon Sun and Moon Special Demo.",
+        "It is introduced as a playable fighter in the Super Smash Bros. series.",
+        "It moves with 'a ninja's grace' and is associated with Ninjutsu.",
+        "Its unique move, Mat Block, shields the user's side with a flipped-up mat.",
+        "Its Protean ability allows it to camouflage to the type of the attack it uses.",
+        "Its design was created by Yusuke Ohmura, who also designed the mascots Xerneas and Yveltal.",
+        "Ash's Greninja gained considerable power, endurance, and speed in its Ash-Greninja form.",
+    ],
+    "wobbuffet": [
+        "It is usually docile but will counterattack when attacked, inflating its body to initiate the strike.",
+        "When multiple Wobbuffet meet, they will try to outlast each other in a battle of endurance.",
+        "Jessie's Wobbuffet frequently emerges from its Poké Ball on its own accord, a trait that initially annoyed Jessie.",
+        "The female Wobbuffet has a red marking on its mouth that resembles lipstick.",
+        "Wobbuffet is very protective of its black tail, to the point where it becomes aggressive if the tail is touched.",
+        "It was left at Team Rocket HQ before the trio departed for Unova, but later reunited with Jessie in the Kalos region.",
+    ],
+    "mimikyu": [
+        "Anime: Jessie's Mimikyu has a deep, murderous grudge against Pikachu.",
+        "Lore: A scholar who saw under its rag died from shock.",
+        "Game: Its 'Disguise' ability lets it take one free hit without damage."
+    ],
+    "tinkaton": [
+        "Lore: It hunts Corviknight to steal their metal for its hammer.",
+        "Game: Has a signature move 'Gigaton Hammer' with 160 base power.",
+        "Fan Fact: A menace to the Galar taxi service."
+    ],
+    "arceus": [
+        "Lore: It shaped the universe with its 1,000 arms.",
+        "Game: Can change its type to anything depending on the Plate it holds.",
+        "Anime: Almost destroyed humanity in 'Jewel of Life' due to betrayal."
+    ],
+    "mew": [
+        "Fan Myth: Rumored to be hiding under the truck near the S.S. Anne in Red/Blue.",
+        "Game: Contains the DNA of every Pokémon, allowing it to learn every TM/HM.",
+        "Anime: Playfully fought Mewtwo in the first movie to prove natural strength vs clones."
+    ],
+    "magikarp": [
+        "Lore: It is said to be able to leap over a mountain using Splash, but it does no damage.",
+        "Anime: James bought one from a scam artist, only for it to evolve into Gyarados and attack him.",
+        "Game: Requires 400 candies to evolve in Pokémon GO, the highest amount."
+    ],
+    "gyarados": [
+        "Shiny: The Red Gyarados in Lake of Rage is the first shiny many players ever encountered.",
+        "Anime: Misty, a water trainer, had a phobia of Gyarados until she bonded with one.",
+        "Mega: Becomes Water/Dark type and gains Mold Breaker."
+    ],
+    "eevee": [
+        "Manga: Red's Eevee could mutate into Vaporeon, Jolteon, or Flareon and turn back freely.",
+        "Game: The partner Eevee in 'Let's Go' cannot evolve and has perfect stats.",
+        "Lore: Its unstable DNA allows it to adapt to any environment."
+    ],
+    "snorlax": [
+        "Anime: Ash's Snorlax had to be fed a year's supply of grapefruit to be caught.",
+        "Game: Often blocks key paths (Route 12) and requires a Poké Flute to wake up.",
+        "Manga: Red's Snorlax (Snor) served as a makeshift trampoline/shield."
+    ],
+    "lugia": [
+        "Anime: Known as the 'Beast of the Sea' in Pokémon The Movie 2000.",
+        "Game: Despite being the guardian of the seas, it is Psychic/Flying, not Water type.",
+        "Lore: Its wings pack enough power to blow apart regular houses."
+    ],
+    "ho-oh": [
+        "Anime: Appeared to Ash in the very first episode, years before Gold/Silver released.",
+        "Lore: Revived the three legendary beasts (Raikou, Entei, Suicune) from the ashes of the Burned Tower.",
+        "Item: Leaves behind a Rainbow Wing to pure-hearted trainers."
+    ]
 }
 
 cols = {
@@ -56,42 +192,58 @@ def sound(u):
     try: subprocess.run(cmd, stderr=subprocess.DEVNULL, shell=(os.name=='nt'))
     except: pass
 
-def read_art(n, s=False, f=None):
+def gen_ascii(url):
+    if not HAS_PIL or not url: return None
+    try:
+        r = requests.get(url, verify=False, timeout=5)
+        im = Image.open(BytesIO(r.content)).convert("RGBA")
+        width = 22
+        w_percent = (width / float(im.size[0]))
+        h_size = int((float(im.size[1]) * float(w_percent)) * 0.55)
+        im = im.resize((width, h_size), Image.Resampling.NEAREST)
+        ascii_str = ""
+        pixels = im.load()
+        for y in range(im.size[1]):
+            for x in range(im.size[0]):
+                r, g, b, a = pixels[x, y]
+                txt = " " if a < 50 else f"\033[38;2;{r};{g};{b}m█\033[0m"
+                ascii_str += txt
+            ascii_str += "\n"
+        return ascii_str
+    except: return None
+
+def read_art(n, s=False, f=None, sprite_url=None):
     try:
         here = os.path.dirname(os.path.realpath(__file__))
         home = os.path.expanduser("~")
-        
-        # SEARCH PATHS
         paths = [
             os.path.join(home, ".local", "share", "pokefact", "pokemon-colorscripts", "colorscripts"),
             os.path.join(home, ".pokefact", "pokemon-colorscripts", "colorscripts"),
             os.path.join(here, "../pokemon-colorscripts/colorscripts")
         ]
-        
         root = next((p for p in paths if os.path.exists(p)), None)
-        if not root: return None
-
-        # Check subfolders (prioritize small)
-        folders = ["small", "regular", "large", "."]
-        mode = "shiny" if s else "regular"
         
-        # Name candidates
-        cands = []
-        if f:
-            cands.append(f"{n}-{f}"); cands.append(f"{f}-{n}"); cands.append(f"{n}_{f}")
-        cands.append(n)
-        if n == "nidoran-m": cands.append("nidoran_m")
-        if n == "nidoran-f": cands.append("nidoran_f")
+        if root:
+            folders = ["small", "regular", "large", "."]
+            mode = "shiny" if s else "regular"
+            cands = []
+            if f:
+                cands.append(f"{n}-{f}"); cands.append(f"{f}-{n}"); cands.append(f"{n}_{f}")
+            cands.append(n)
+            if n == "nidoran-m": cands.append("nidoran_m")
+            if n == "nidoran-f": cands.append("nidoran_f")
 
-        for sub in folders:
-            for name_try in cands:
-                p1 = os.path.join(root, sub, mode, name_try)
-                if os.path.exists(p1):
-                    with open(p1, "r", encoding="utf-8") as x: return x.read()
-                p2 = os.path.join(root, sub, name_try)
-                if os.path.exists(p2):
-                    with open(p2, "r", encoding="utf-8") as x: return x.read()
+            for sub in folders:
+                for name_try in cands:
+                    p1 = os.path.join(root, sub, mode, name_try)
+                    if os.path.exists(p1):
+                        with open(p1, "r", encoding="utf-8") as x: return x.read()
+                    p2 = os.path.join(root, sub, name_try)
+                    if os.path.exists(p2):
+                        with open(p2, "r", encoding="utf-8") as x: return x.read()
     except: pass
+
+    if sprite_url: return gen_ascii(sprite_url)
     return None
 
 def get_weak(types):
@@ -109,41 +261,36 @@ def get_weak(types):
 
 def make_gal(d, sd):
     nm = d['name']
-    
-    # 1. Base Forms (Use SUB if missing)
-    a1 = read_art(nm) or SUB
-    a2 = read_art(nm, True) or SUB
+    spr = d['sprites']
+    front = spr.get('other', {}).get('official-artwork', {}).get('front_default') or spr['front_default']
+    shiny = spr.get('other', {}).get('official-artwork', {}).get('front_shiny') or spr['front_shiny']
+
+    a1 = read_art(nm, False, None, front) or "\n[dim]No Data[/]"
+    a2 = read_art(nm, True, None, shiny) or "\n[dim]No Data[/]"
     
     top = Columns([
         Panel(Text.from_ansi(a1), title="Normal", box=box.MINIMAL),
         Panel(Text.from_ansi(a2), title="Shiny", box=box.MINIMAL)
     ], equal=True)
     
-    # 2. Special Forms (Mega, Gmax, Alola, Hisui)
-    specials = []
-    
-    # Filter keywords for interesting forms
-    keywords = ['mega', 'gmax', 'alola', 'hisui', 'galar', 'paldea', 'primal', 'origin']
-    
+    megas = []
     for v in sd.get('varieties', []):
         vn = v['pokemon']['name']
         if vn == nm: continue
-        
-        if any(k in vn for k in keywords):
+        if any(x in vn for x in ['mega', 'gmax', 'alola', 'hisui', 'galar', 'paldea']):
             cln = vn.replace(nm+"-", "").replace("-", " ").title()
-            form_arg = vn.replace(f"{nm}-", "")
+            form = vn.replace(f"{nm}-", "")
             
-            # Try to find art, fallback to SUB immediately if missing
-            art = read_art(nm, f=form_arg) or SUB
-            
-            # ALWAYS append if it matches keywords
-            specials.append(Panel(Text.from_ansi(art), title=cln, box=box.MINIMAL))
+            vd = grab(v['pokemon']['url'])
+            if vd:
+                vf = vd['sprites'].get('other', {}).get('official-artwork', {}).get('front_default') or vd['sprites']['front_default']
+                art = read_art(nm, False, form, vf)
+                if art: megas.append(Panel(Text.from_ansi(art), title=cln, box=box.MINIMAL))
 
     grp = [top]
-    if specials:
-        grp.append(Text("\nFORMS & VARIATIONS", style="bold magenta", justify="center"))
-        grp.append(Columns(specials, equal=True))
-        
+    if megas:
+        grp.append(Text("\nFORMS", style="bold magenta", justify="center"))
+        grp.append(Columns(megas, equal=True))
     return Panel(Group(*grp), box=box.MINIMAL)
 
 def get_evo(url):
@@ -192,21 +339,25 @@ def show(d, sd):
         sn = s['stat']['name'].replace("special-","Sp.").replace("attack","Atk").replace("defense","Def").title()
         g.add_row(sn, f"[bold {c}]{val}[/bold {c}] {bar}")
 
-    flavs = []
+    all_facts = []
     for f in sd['flavor_text_entries']:
         if f['language']['name'] == 'en':
             txt = f['flavor_text'].replace("\n", " ").replace("\f", " ")
-            if txt not in flavs: flavs.append(txt)
-    facts = random.sample(flavs, min(len(flavs), 3)) if flavs else ["No data"]
+            if txt not in all_facts: all_facts.append(txt)
+    
+    if d['name'] in trivia:
+        for fact in trivia[d['name']]:
+            all_facts.append(f"[bold gold1]★ {fact}[/]")
+
+    selected_facts = random.sample(all_facts, min(len(all_facts), 5)) if all_facts else ["No data"]
     
     lore = Text()
-    if d['name'] in trivia: lore.append(f"★ ANIME: {trivia[d['name']]}\n", style="bold gold1")
     if 'evolution_chain' in sd and sd['evolution_chain']:
         e_str = get_evo(sd['evolution_chain']['url'])
         lore.append(f"\nEVO: {e_str}\n", style="bold cyan")
     
-    lore.append(f"\nINFO:\n", style=f"bold {c}")
-    for i, f in enumerate(facts, 1): lore.append(f"{i}. {f}\n", style="dim white")
+    lore.append(f"\nINFO & LORE:\n", style=f"bold {c}")
+    for i, f in enumerate(selected_facts, 1): lore.append(f"{i}. {f}\n", style="dim white")
     
     l_m, t_m = [], []
     for m in d['moves']:
