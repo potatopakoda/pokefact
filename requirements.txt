@@ -1,2 +1,4 @@
 requests
 rich
+urllib3
+Pillow
