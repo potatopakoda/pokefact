@@ -18,7 +18,7 @@ it fits your rice. it handles tokyo night/catppuccin colors automatically. it pl
 
 ## 📦 you need these
 
-- **linux** or **macos** (windows users: use wsl or go away)
+- **linux** or **macos** (windows users: use wsl or go away or wait for an update)
 - **python 3.10+**
 - **mpv** (optional, for audio cries)
 - **nerd fonts** (if you want icons to work)
@@ -27,36 +27,36 @@ it fits your rice. it handles tokyo night/catppuccin colors automatically. it pl
 
 just copy paste this. it creates a venv so it doesn't break your system python.
 
-```bash
-git clone [https://github.com/potatopakoda/pokefact.git](https://github.com/YOUR_USERNAME/pokefact.git)
-cd pokefact
-chmod +x install.sh
+```
+git clone https://github.com/potatopakoda/pokefact.git &&
+cd pokefact && 
+chmod +x install.sh &&
 ./install.sh
 ```
 
 🎮 usage
 get a random mon because you're bored:
 
-```Bash
+```
 pokefact
 ```
 
 look up specific stuff:
 
-```Bash
+```
 pokefact -p gengar
 ```
 
 shiny mode + audio (loud):
 
-```Bash
+```
 pokefact -p lucario -s -a
 ```
 
 🗑️ uninstall
 if you hate it:
 
-```Bash
+```
 ./uninstall.sh
 ```
 
@@ -77,6 +77,35 @@ mit license. steal this code if you want, i don't care.
 
 
 
+[UPDATE!!!!!!]
+
+for windows users, there's a .ps1 file. Steps to install :
+1. open powershell
+2. make sure you have git installed
+3. Run
+```
+git clone https://github.com/potatopakoda/pokefact.git
+```
+
+```
+cd pokefact
+```
+
+```
+chmod +x install.sh
+```
+
+```
+.\install.sh
+```
+
+4. close window and open a new one.
+5. Ta-Daaa!!
+
+
+
+***NOTE***
+audio may not work on windows, idk why though i didn't bother. so...yeahh :)
 
 
 
