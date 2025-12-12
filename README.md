@@ -6,7 +6,7 @@
 
 i wrote this at 3am because i needed to check garchomp's speed stat without leaving neovim. it fetches data from pokeapi, grabs ascii art from a local database, and prints it all pretty-like using `rich`.
 
-it fits your rice. it handles tokyo night/catppuccin colors automatically. it plays audio cries if you have `mpv`.
+it fits your rice. it plays audio cries if you have `mpv`.
 
 ## ✨ stuff it does
 
@@ -106,6 +106,7 @@ chmod +x install.sh
 
 ***NOTE***
 audio may not work on windows, idk why though i didn't bother. so...yeahh :)
+alsao you might need to troublesoot a lot, soo goodluck :)
 
 
 
